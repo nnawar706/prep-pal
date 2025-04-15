@@ -39,10 +39,13 @@ const AuthForm = ({type}: AuthFormProp) => {
         try {
             if (type === "sign-up") {
                 const {name, email, password} = data;
+
+                toast.success("Account created successfully.");
+                router.push("/sign-in");
             }
         } catch (e) {
             console.log(e);
-            toast.error(`Caution ${e}`);
+            toast.error(`Caution: ${e}`);
         }
     }
 

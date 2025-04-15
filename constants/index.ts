@@ -1,5 +1,8 @@
 // import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
 import { z } from "zod";
+import {Interview} from "@/types";
+
+export const techIconBaseURL = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons";
 
 export const mappings = {
   "react.js": "react",
