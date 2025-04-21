@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import {AuthFormProp, FormType} from "@/types";
+import {AuthFormProp, FormType, ResultProps} from "@/types";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
 import {z} from "zod";
@@ -12,6 +12,9 @@ import {Form} from "@/components/ui/form";
 import FormField from "@/components/FormField";
 import {Button} from "@/components/ui/button";
 import Link from "next/link";
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword} from "firebase/auth";
+import {auth} from "@/firebase/client";
+import {signIn, signUp} from "@/lib/actions/auth.actions";
 
 const authFormSchema = (type: FormType) => {
     return z.object({
@@ -37,12 +40,42 @@ const AuthForm = ({type}: AuthFormProp) => {
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
+            let result: ResultProps;
+
             if (type === "sign-up") {
                 const {name, email, password} = data;
 
-                toast.success("Account created successfully.");
-                router.push("/sign-in");
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+                result = await signUp({
+                    uid: userCredential.user.uid,
+                    name: name!,
+                    email,
+                    password
+                })
+            } else {
+                const { email, password } = data;
+
+                const userCredential = await signInWithEmailAndPassword(auth, email, password)
+
+                const idToken = await userCredential.user.getIdToken();
+
+                if (!idToken) {
+                    toast.error("Sign in failed. Please try again.")
+                    return;
+                }
+
+                result = await signIn({email, idToken});
             }
+
+            if (!result.success) {
+                toast.error(result.message);
+                return;
+            }
+
+            toast.success(result.message);
+
+            type === "sign-up" ? router.push("/sign-in") : router.push("/");
         } catch (e) {
             console.log(e);
             toast.error(`Caution: ${e}`);
@@ -61,7 +94,7 @@ const AuthForm = ({type}: AuthFormProp) => {
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}
-                    className={"w-full space-y-6 mt-4 form"}>
+                          className={"w-full space-y-6 mt-4 form"}>
                         {type === "sign-up" && (
                             <FormField
                                 control={form.control}
@@ -97,7 +130,7 @@ const AuthForm = ({type}: AuthFormProp) => {
                 <p className={"text-center"}>
                     {type === "sign-up" ? "Have an account already?" : "No account yet?"}
                     <Link href={type === "sign-up" ? "/sign-in" : "/sign-up"}
-                    className={"font-bold text-user-primary ml-1"}>
+                          className={"font-bold text-user-primary ml-1"}>
                         {type === "sign-up" ? "Sign In" : "Sign Up"}
                     </Link>
                 </p>

@@ -4,6 +4,8 @@ import {Interview} from "@/types";
 
 export const techIconBaseURL = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons";
 
+export const SESSION_DURATION = 60 * 60 * 24 * 7
+
 export const mappings = {
   "react.js": "react",
   reactjs: "react",

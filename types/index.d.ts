@@ -1,10 +1,15 @@
 import {ReactNode} from "react";
 
-export interface LayoutProp {
+interface LayoutProp {
   children: ReactNode
 }
 
-export interface AuthFormProp {
+interface ResultProps {
+  success: boolean;
+  message: string;
+}
+
+interface AuthFormProp {
   type: FormType
 }
 
