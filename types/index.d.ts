@@ -63,12 +63,17 @@ interface InterviewCardProps {
 }
 
 interface AgentProps {
-  userName: string;
-  userId?: string;
+  name: string;
+  id?: string;
   interviewId?: string;
   feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
+}
+
+interface SavedMessageProps {
+  role: "user" | "system" | "assistant";
+  content: string;
 }
 
 interface RouteParams {

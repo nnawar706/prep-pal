@@ -1,7 +1,13 @@
 import React from 'react'
 import {LayoutProp} from "@/types";
+import {isAuthenticated} from "@/lib/actions/auth.actions";
+import {redirect} from "next/navigation";
 
-const AuthLayout = ({ children }: LayoutProp) => {
+const AuthLayout = async ({ children }: LayoutProp) => {
+    const isLoggedIn = await isAuthenticated();
+
+    if (isLoggedIn) redirect("/");
+    
     return (
         <div className={"auth-layout"}>
             {children}

@@ -6,6 +6,13 @@ export const techIconBaseURL = "https://cdn.jsdelivr.net/gh/devicons/devicon/ico
 
 export const SESSION_DURATION = 60 * 60 * 24 * 7
 
+export enum CallStatus {
+  INACTIVE = "INACTIVE",
+  CONNECTING = "CONNECTING",
+  ACTIVE = "ACTIVE",
+  FINISHED = "FINISHED",
+}
+
 export const mappings = {
   "react.js": "react",
   reactjs: "react",
