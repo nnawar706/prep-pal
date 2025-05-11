@@ -1,5 +1,5 @@
 import React from 'react'
-import {cn, getRandomCover} from "@/lib/utils";
+import {cn, getRandomCoverImage} from "@/lib/utils";
 import Image from "next/image";
 import dayjs from "dayjs";
 import {Button} from "@/components/ui/button";
@@ -22,7 +22,7 @@ const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt}: 
                         <p className={"badge-text"}>{normalizedType}</p>
                     </div>
 
-                    <Image src={getRandomCover()} alt={"cover"} width={90} height={90}
+                    <Image src={getRandomCoverImage()} alt={"cover"} width={90} height={90}
                     className={"rounded-full object-fit size-[90px]"}/>
 
                     <h3 className={"mt-5 capitalize"}>{role} Interview</h3>

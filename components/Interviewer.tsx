@@ -3,9 +3,11 @@
 import React, {useEffect, useState} from 'react'
 import {AgentProps, SavedMessageProps} from "@/types";
 import {useRouter} from "next/navigation";
-import {CallStatus} from "@/constants";
+import {CallStatus, interviewer} from "@/constants";
 import Image from "next/image";
 import {cn} from "@/lib/utils";
+import {vapi} from "@/lib/vapi.sdk";
+import {toast} from "sonner";
 
 const Interviewer = ({
     name,
@@ -16,15 +18,60 @@ const Interviewer = ({
     questions
                      }: AgentProps) => {
     const router = useRouter();
-    const [isSpeaking, SetIsSpeaking] = useState<boolean>(false);
-    const [lassMessage, setLastMessage] = useState<string>("");
+    const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+    const [lastMessage, setLastMessage] = useState<string>("");
     const [messages, setMessages] = useState<SavedMessageProps[]>([]);
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
 
     useEffect(() => {
-        if (messages.length > 0) {
-            setLastMessage(messages[messages.length - 1].content)
+        const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
+
+        const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+
+        const onMessage = (message: Message) => {
+            if (message.type === "transcript" && message.transcriptType === "final") {
+                const newMessage = {
+                    role: message.role,
+                    content: message.transcript
+                };
+
+                setMessages((prev) => [...prev, newMessage]);
+            }
         }
+
+        const onSpeechStart = () => setIsSpeaking(true);
+
+        const onSpeechEnd = () => setIsSpeaking(false);
+
+        const onError = (e: Error) => {
+            console.log("Error:", e);
+            toast.error("Caution: Something went wrong.");
+        }
+
+        vapi.on("call-start", onCallStart);
+
+        vapi.on("call-end", onCallEnd);
+
+        vapi.on("message", onMessage);
+
+        vapi.on("speech-start", onSpeechStart);
+
+        vapi.on("speech-end", onSpeechEnd);
+
+        vapi.on("error", onError);
+
+        return () => {
+            vapi.off("call-start", onCallStart);
+            vapi.off("call-end", onCallEnd);
+            vapi.off("message", onMessage);
+            vapi.off("speech-start", onSpeechStart);
+            vapi.off("speech-end", onSpeechEnd);
+            vapi.off("error", onError);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (messages.length > 0) setLastMessage(messages[messages.length - 1].content);
 
         const generateAIFeedback = async (messages: SavedMessageProps[]) => {
 
@@ -39,13 +86,35 @@ const Interviewer = ({
         }
     }, [messages, callStatus, feedbackId, interviewId, router, type, id]);
 
-    const handleCall = () => {
-        
+    const handleCall = async () => {
+        setCallStatus(CallStatus.CONNECTING);
+
+        if (type === "generate") {
+            await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+                variableValues: {
+                    name: name,
+                    userid: id
+                }
+            });
+        } else {
+            const formattedQuestions = questions ?
+                questions.map((q) => `- ${q}`).join("\n")
+                : "";
+
+            await vapi.start(interviewer, {
+                variableValues: {
+                    questions: formattedQuestions
+                }
+            });
+        }
     }
 
-    const handleDisconnect = () => {
-
+    const handleCallDisconnect = async () => {
+        setCallStatus(CallStatus.FINISHED);
+        vapi.stop();
     }
+
+    const latestMessage = messages[messages.length - 1]?.content;
 
     return (
         <div>
@@ -72,7 +141,7 @@ const Interviewer = ({
                 <div className={"transcript-border"}>
                     <div className={"transcript"}>
                         <p className={"transition-opacity duration-500 opacity-0 animate-fadeIn opacity-100"}>
-                            {lassMessage}
+                            {latestMessage}
                         </p>
                     </div>
                 </div>
@@ -88,7 +157,7 @@ const Interviewer = ({
                         </span>
                     </button>
                 ): (
-                    <button className={"btn-disconnect"} onClick={handleDisconnect}>End</button>
+                    <button className={"btn-disconnect"} onClick={handleCallDisconnect}>End</button>
                 )}
             </div>
         </div>

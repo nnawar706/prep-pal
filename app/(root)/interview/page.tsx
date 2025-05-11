@@ -3,9 +3,7 @@ import {getCurrentUser} from "@/lib/actions/auth.actions";
 import Interviewer from "@/components/Interviewer";
 
 const Page = async () => {
-    const user = await getCurrentUser()
-
-    console.log(user)
+    const user = await getCurrentUser();
 
     return (
         <div>
