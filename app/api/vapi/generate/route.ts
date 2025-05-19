@@ -31,6 +31,8 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString(),
         };
 
+        console.log(interview);
+
         await db.collection("interviews").add(interview);
 
         return Response.json({ success: true }, { status: 201 });
